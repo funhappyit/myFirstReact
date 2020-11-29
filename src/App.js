@@ -1,6 +1,7 @@
 import React,{ useRef, useReducer,useMemo, useCallback} from 'react';
 import CreateUser from './CreateUser';
 import UserList from './UserList';
+import useInputs from './useInputs';
 
 function countActiveUsers(users){
   console.log('활성 사용자 수를 세는중....');
@@ -8,10 +9,7 @@ function countActiveUsers(users){
 }
 
 const initialState = {
-  inputs: {
-    username: '',
-    email: '',
-  },
+
   users:[
     {
         id: 1,
@@ -35,14 +33,7 @@ const initialState = {
 }
 function reducer(state, action){
   switch(action.type){
-    case 'CHANGE_INPUT':
-      return{
-        ...state,
-        inputs:{
-          ...state.inputs,
-          [action.name]:action.value
-        }
-      };
+ 
       case 'CREATE_USER':
         return{
           inputs:initialState.inputs,
@@ -71,18 +62,15 @@ function reducer(state, action){
 function App() {
    //첫번째는 현재 상태 dispatch는 액션을 발생시키는 함수 
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [form,onChange, reset] = useInputs({
+    username: '',
+    email:'',
+  });
+  const {username, email} = form;
+
   const nextId = useRef(4);
   const {users} = state;
-  const {username, email} = state.inputs;
 
-  const onChnage = useCallback(e =>{
-    const{name, value} = e.target;
-    dispatch({
-      type:'CHANGE_INPUT',
-      name,
-      value
-    })
-  },[]);
 
   const onCreate = useCallback(() => {
     dispatch({
@@ -95,7 +83,9 @@ function App() {
 
     });
     nextId.current += 1;
-    },[username, email]);
+    reset();
+    //reset은 반환된 값이기 때문에 es6의 규칙상 넣어줌
+    },[username, email,reset]);
     
     const onToggle = useCallback(id =>{
       dispatch({
@@ -112,16 +102,9 @@ function App() {
     }, []);
 
     const count = useMemo(() => countActiveUsers(users),[users])
-
-
-
-
-
-
-
   return (
     <>
-    <CreateUser username={username} email={email} onChange={onChnage} onCreate={onCreate}/>
+    <CreateUser username={username} email={email} onChange={onChange} onCreate={onCreate}/>
     <UserList users={users} onToggle={onToggle} onRemove={onRemove}/>
     <div>활성 사용자 수: {count}</div>
    </>
